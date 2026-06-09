@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
-import { Locale, randomName, randomText } from './catIpsum';
-import { randomCatId, renderJpeg, renderPng } from './catPixel';
+import { randomName, randomText } from './catIpsum';
+import { fetchCatPhoto } from './catPhoto';
+import { randomCatId, renderPng } from './catPixel';
 import { createRng, defaultRng, RNG } from './rng';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -22,7 +23,9 @@ export interface GenerateOptions {
   output: string;
   seed?: number;
   prefix?: string;
-  locale: Locale;
+  /** JPEG photo size in pixels — square (cataas.com). Default: 300. */
+  size: number;
+  /** PNG pixel art scale multiplier (1 = 10px/pixel). Default: 3. */
   scale: number;
   dryRun: boolean;
 }
@@ -46,18 +49,24 @@ async function buildCats(
   options: GenerateOptions,
   rng: RNG,
 ): Promise<CatFixture[]> {
-  const { count, locale, scale } = options;
-  console.log(`Generating ${count} cat(s)...`);
+  const { count, size, scale } = options;
+  console.log(`Generating ${count} cat(s)…`);
   const cats: CatFixture[] = [];
   for (let i = 0; i < count; i++) {
     const catId = randomCatId(rng);
+    // PNG  → pixel art from the real Moon-Cat ID pool
+    // JPEG → real cat photo fetched from cataas.com
+    const [pngBuffer, { jpegBuffer }] = await Promise.all([
+      renderPng(catId, scale),
+      fetchCatPhoto(size),
+    ]);
     cats.push({
       index: i + 1,
       id: catId,
-      name: randomName(locale, rng),
-      text: randomText(locale, rng, 4),
-      pngBuffer: await renderPng(catId, scale),
-      jpegBuffer: await renderJpeg(catId, scale),
+      name: randomName(rng),
+      text: randomText(rng, 4),
+      pngBuffer,
+      jpegBuffer,
     });
     process.stdout.write(`\r  ${i + 1}/${count}`);
   }
@@ -115,13 +124,13 @@ export async function generate(options: GenerateOptions): Promise<void> {
 // ── Dry run ───────────────────────────────────────────────────────────────────
 
 function printDryRun(options: GenerateOptions): void {
-  const { count, formats, output, seed, prefix, locale, scale } = options;
+  const { count, formats, output, seed, prefix, size, scale } = options;
   console.log('\n[Dry run] — no files will be written\n');
   console.log(`  count   : ${count}`);
   console.log(`  formats : ${formats.join(', ')}`);
   console.log(`  output  : ${output}`);
-  console.log(`  locale  : ${locale}`);
-  console.log(`  scale   : ${scale}x`);
+  console.log(`  scale   : ${scale}x  (PNG pixel art)`);
+  console.log(`  size    : ${size}×${size}px  (JPEG photo)`);
   if (seed !== undefined) console.log(`  seed    : ${seed}`);
   if (prefix) console.log(`  prefix  : ${prefix}`);
   console.log('\nFiles that would be generated:');
@@ -328,41 +337,71 @@ async function writePdf(
   output: string,
   _prefix?: string,
 ): Promise<void> {
-  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: true });
   const out = fs.createWriteStream(path.join(output, 'cats.pdf'));
   doc.pipe(out);
 
-  const pageWidth = (doc.page.width as number) - 100;
-  const imgSize = 120;
+  const pageW = (doc.page.width as number) - 100; // 495 on A4
+  const pageH = doc.page.height as number;
+  const imgSize = 110;
 
   cats.forEach((cat, i) => {
     if (i > 0) doc.addPage();
 
-    doc.roundedRect(50, 50, pageWidth, 44, 6).fill('#f5f5f5');
+    // ── Header ──────────────────────────────────────────────────────────────
+    doc.roundedRect(50, 50, pageW, 48, 6).fill('#f5f5f5');
     doc
       .fillColor('#333333')
-      .fontSize(22)
+      .fontSize(20)
       .font('Helvetica-Bold')
-      .text(cat.name, 60, 60, { width: pageWidth - imgSize - 20 });
+      .text(cat.name, 60, 58, {
+        width: pageW - imgSize - 24,
+        lineBreak: false,
+      });
     doc
       .fillColor('#999999')
       .fontSize(9)
       .font('Helvetica')
-      .text(`id: ${cat.id}`, 60, 84);
-    doc.image(cat.pngBuffer, 50 + pageWidth - imgSize, 50, { width: imgSize });
-    doc.fillColor('#222222').fontSize(11).font('Helvetica').moveDown(4);
+      .text(`id: ${cat.id}`, 60, 80, { lineBreak: false });
 
-    cat.text.split('\n\n').forEach((para, pi, arr) => {
-      doc.text(para, 50, undefined, { width: pageWidth, align: 'justify' });
-      if (pi < arr.length - 1) doc.moveDown(0.8);
+    // ── Cat image (safe — ignore if buffer is unreadable) ───────────────────
+    try {
+      doc.image(cat.pngBuffer, 50 + pageW - imgSize, 48, {
+        width: imgSize,
+        height: imgSize,
+        fit: [imgSize, imgSize],
+      });
+    } catch (_) {
+      /* skip broken image */
+    }
+
+    // ── Body text ────────────────────────────────────────────────────────────
+    // Explicitly set cursor below the header — never rely on implicit state
+    // after image() or absolute text() calls.
+    const bodyTop = 114;
+    doc.y = bodyTop;
+    doc.fillColor('#222222').fontSize(10.5).font('Helvetica');
+
+    const paragraphs = cat.text.split('\n\n');
+    paragraphs.forEach((para, pi) => {
+      // stop writing if we're too close to the footer zone
+      if (doc.y > pageH - 60) return;
+      doc.text(para, 50, doc.y, {
+        width: pageW,
+        align: 'justify',
+        lineBreak: true,
+      });
+      if (pi < paragraphs.length - 1) doc.moveDown(0.7);
     });
 
+    // ── Footer ───────────────────────────────────────────────────────────────
     doc
       .fillColor('#bbbbbb')
       .fontSize(8)
-      .text(`${i + 1} / ${cats.length}`, 50, (doc.page.height as number) - 40, {
+      .text(`${i + 1} / ${cats.length}`, 50, pageH - 38, {
         align: 'center',
-        width: pageWidth,
+        width: pageW,
+        lineBreak: false,
       });
   });
 

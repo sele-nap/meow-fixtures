@@ -1,4 +1,6 @@
+import fs from 'fs';
 import Jimp from 'jimp';
+import path from 'path';
 import { RNG, defaultRng } from './rng';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -7,15 +9,40 @@ type RGB = [number, number, number];
 type Pixel = RGB | null;
 type ImageGrid = Pixel[][];
 
-// ── Random cat ID generation ──────────────────────────────────────────────────
+// ── Cat ID pool (25 343 real Moon-Cat IDs) ────────────────────────────────────
 
+let _catIdPool: string[] | null = null;
+
+function getCatIdPool(): string[] {
+  if (_catIdPool) return _catIdPool;
+  // Works both in ts-node (src/) and compiled node (dist/)
+  const dataPath = path.join(__dirname, '..', 'data', 'catIds.txt');
+  _catIdPool = fs
+    .readFileSync(dataPath, 'utf8')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return _catIdPool;
+}
+
+/**
+ * Picks a random cat ID from the real Moon-Cat collection (25 343 IDs).
+ * Falls back to a freshly generated ID if the data file is unavailable.
+ */
 export function randomCatId(rng: RNG = defaultRng): string {
-  // byte 0 = 0 → non-genesis cat (vivid colors derived from r, g, b bytes)
-  const bytes = [
-    0,
-    ...Array.from({ length: 4 }, () => Math.floor(rng() * 256)),
-  ];
-  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const pool = getCatIdPool();
+    // Strip leading "0x" if present, normalise to 10 hex chars
+    const raw = pool[Math.floor(rng() * pool.length)] as string;
+    return raw.replace(/^0x/, '').toLowerCase().padStart(10, '0');
+  } catch {
+    // Fallback: generate a valid non-genesis ID on the fly
+    const bytes = [
+      0,
+      ...Array.from({ length: 4 }, () => Math.floor(rng() * 256)),
+    ];
+    return bytes.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
 }
 
 // ── Color conversion ─────────────────────────────────────────────────────────

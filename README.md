@@ -1,6 +1,6 @@
 # meow-fixtures
 
-Generate pixel art cats + cat ipsum text as test fixtures in multiple formats.
+Generate real cat photos + cat ipsum text as test fixtures in multiple formats.
 
 ## Installation
 
@@ -37,11 +37,17 @@ Generates 10 cats in all formats into `./output`.
 
 ### Options
 
-| Option | Alias | Default | Description |
-|---|---|---|---|
-| `--count` | `-n` | `10` | Number of cats to generate |
-| `--formats` | `-f` | `all` | Comma-separated list of formats |
-| `--output` | `-o` | `./output` | Output directory |
+| Option      | Alias | Default    | Description                                           |
+| ----------- | ----- | ---------- | ----------------------------------------------------- |
+| `--count`   | `-n`  | `10`       | Number of cats to generate                            |
+| `--formats` | `-f`  | `all`      | Comma-separated list of formats (or `all`)            |
+| `--output`  | `-o`  | `./output` | Output directory                                      |
+| `--seed`    | `-s`  | —          | Random seed for reproducible output                   |
+| `--prefix`  | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna`)   |
+| `--scale`   |       | `3`        | PNG pixel art scale (1 = 10px/pixel, 3 = 30px/pixel)  |
+| `--size`    |       | `300`      | JPEG photo size in pixels — square (e.g. `500×500`)   |
+| `--dry-run` |       | `false`    | Preview what would be generated without writing files |
+| `--watch`   | `-w`  | `false`    | Re-generate on Enter keypress (Ctrl+C to exit)        |
 
 ---
 
@@ -109,11 +115,14 @@ output/
 
 ### Format details
 
-| Format | Content |
-|---|---|
-| `png` | Transparent background pixel art cat |
-| `jpeg` | White background pixel art cat |
-| `json` | Array of cats with name, text, image path and base64 |
-| `csv` | One cat per row with name, text, image path and base64 |
-| `txt` | Plain text with cat name and cat ipsum paragraphs |
-| `pdf` | Laid out pages with cat image and cat ipsum text |
+| Format  | Content                                                 |
+| ------- | ------------------------------------------------------- |
+| `png`   | Pixel art cat from the Moon-Cat collection (25 343 IDs) |
+| `jpeg`  | Real cat photo fetched from cataas.com                  |
+| `json`  | Array of cats with name, text, image path and base64    |
+| `csv`   | One cat per row with name, text, image path and base64  |
+| `txt`   | Plain text with cat name and cat ipsum paragraphs       |
+| `pdf`   | Laid out pages with cat image and cat ipsum text        |
+| `sql`   | `CREATE TABLE` + `INSERT` statements                    |
+| `md`    | Markdown table + detail sections for each cat           |
+| `types` | TypeScript `Cat[]` const with full type definitions     |

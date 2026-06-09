@@ -15,9 +15,9 @@ export {
   randomSentence,
   randomText,
 } from './catIpsum';
-export type { Locale } from './catIpsum';
 
-export { randomCatId, renderJpeg, renderPng } from './catPixel';
+export { fetchCatPhoto } from './catPhoto';
+export { randomCatId, renderPng } from './catPixel';
 
 export { createRng, defaultRng } from './rng';
 export type { RNG } from './rng';

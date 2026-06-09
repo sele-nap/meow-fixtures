@@ -8,7 +8,7 @@ import { ALL_FORMATS, generate, GenerateOptions } from './generator';
 
 // ── .meowrc.json ──────────────────────────────────────────────────────────────
 
-function loadRcFile(): Partial<GenerateOptions & { formats: string }> {
+function loadRcFile(): Partial<GenerateOptions> & { formats?: string } {
   const rcPath = path.join(process.cwd(), '.meowrc.json');
   if (!fs.existsSync(rcPath)) return {};
   try {
@@ -65,18 +65,15 @@ yargs(process.argv.slice(2))
           default: rc.prefix,
           describe: 'Prefix for output filenames (e.g. "auth", "product")',
         })
-        .option('locale', {
-          alias: 'l',
-          type: 'string',
-          default: rc.locale ?? 'en',
-          choices: ['en', 'fr'],
-          describe: 'Language for cat names and ipsum text',
-        })
         .option('scale', {
           type: 'number',
-          default: rc.scale ?? 1,
-          describe:
-            'Image scale multiplier (1 = 10px/pixel, 2 = 20px/pixel, etc.)',
+          default: rc.scale ?? 3,
+          describe: 'PNG pixel art scale (1 = 10px/pixel, 3 = 30px/pixel…)',
+        })
+        .option('size', {
+          type: 'number',
+          default: rc.size ?? 300,
+          describe: 'JPEG photo size in pixels — square (e.g. 300 = 300×300)',
         })
         .option('dry-run', {
           type: 'boolean',
@@ -102,8 +99,8 @@ yargs(process.argv.slice(2))
         output: argv.output,
         seed: argv.seed,
         prefix: argv.prefix,
-        locale: argv.locale as 'en' | 'fr',
         scale: argv.scale,
+        size: argv.size,
         dryRun: argv['dry-run'],
       };
 

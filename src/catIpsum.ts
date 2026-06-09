@@ -1,16 +1,55 @@
-import { RNG, defaultRng } from './rng'
+import { RNG, defaultRng } from './rng';
 
 // ── Locales ───────────────────────────────────────────────────────────────────
 
 const DATA = {
   en: {
     names: [
-      'Whiskers', 'Luna', 'Mochi', 'Nala', 'Oliver', 'Simba', 'Bella', 'Cleo',
-      'Felix', 'Mittens', 'Shadow', 'Pepper', 'Coco', 'Loki', 'Nyx', 'Pixel',
-      'Jasper', 'Milo', 'Mango', 'Biscuit', 'Pumpkin', 'Oreo', 'Gizmo', 'Binx',
-      'Salem', 'Duchess', 'Figaro', 'Cheshire', 'Crookshanks', 'Jiji', 'Sable',
-      'Stormy', 'Patches', 'Tabitha', 'Muffin', 'Caramel', 'Sushi', 'Nugget',
-      'Waffles', 'Pickles', 'Jellybean', 'Pretzel', 'Noodle', 'Tofu', 'Chai',
+      'Whiskers',
+      'Luna',
+      'Mochi',
+      'Nala',
+      'Oliver',
+      'Simba',
+      'Bella',
+      'Cleo',
+      'Felix',
+      'Mittens',
+      'Shadow',
+      'Pepper',
+      'Coco',
+      'Loki',
+      'Nyx',
+      'Pixel',
+      'Jasper',
+      'Milo',
+      'Mango',
+      'Biscuit',
+      'Pumpkin',
+      'Oreo',
+      'Gizmo',
+      'Binx',
+      'Salem',
+      'Duchess',
+      'Figaro',
+      'Cheshire',
+      'Crookshanks',
+      'Jiji',
+      'Sable',
+      'Stormy',
+      'Patches',
+      'Tabitha',
+      'Muffin',
+      'Caramel',
+      'Sushi',
+      'Nugget',
+      'Waffles',
+      'Pickles',
+      'Jellybean',
+      'Pretzel',
+      'Noodle',
+      'Tofu',
+      'Chai',
     ],
     sentences: [
       'Knock everything off the counter for absolutely no reason.',
@@ -77,30 +116,70 @@ const DATA = {
 
   fr: {
     names: [
-      'Minou', 'Félix', 'Minette', 'Caramel', 'Gribouille', 'Mistigri', 'Pelote',
-      'Rouquin', 'Titou', 'Cannelle', 'Pistache', 'Noisette', 'Coquin', 'Malice',
-      'Plume', 'Chipie', 'Fripouille', 'Câlin', 'Poussin', 'Griotte', 'Papillon',
-      'Filou', 'Mousse', 'Biscotte', 'Praline', 'Réglisse', 'Escargot', 'Pantoufle',
-      'Chaussette', 'Pompom', 'Galette', 'Nougat', 'Truffe', 'Cachou', 'Capucine',
+      'Whiskers',
+      'Luna',
+      'Mochi',
+      'Nala',
+      'Oliver',
+      'Simba',
+      'Bella',
+      'Cleo',
+      'Felix',
+      'Mittens',
+      'Shadow',
+      'Pepper',
+      'Coco',
+      'Loki',
+      'Nyx',
+      'Pixel',
+      'Jasper',
+      'Milo',
+      'Mango',
+      'Biscuit',
+      'Pumpkin',
+      'Oreo',
+      'Gizmo',
+      'Binx',
+      'Salem',
+      'Duchess',
+      'Figaro',
+      'Cheshire',
+      'Crookshanks',
+      'Jiji',
+      'Sable',
+      'Stormy',
+      'Patches',
+      'Tabitha',
+      'Muffin',
+      'Caramel',
+      'Sushi',
+      'Nugget',
+      'Waffles',
+      'Pickles',
+      'Jellybean',
+      'Pretzel',
+      'Noodle',
+      'Tofu',
+      'Chai',
     ],
     sentences: [
-      'Renverser le verre d\'eau et observer la catastrophe avec une satisfaction évidente.',
+      "Renverser le verre d'eau et observer la catastrophe avec une satisfaction évidente.",
       'Fixer le mur pendant vingt minutes puis fuir à toute vitesse sans explication.',
-      'S\'installer précisément là où le travail doit être effectué.',
+      "S'installer précisément là où le travail doit être effectué.",
       'Rapporter une souris morte comme cadeau délicat et attendre de la reconnaissance.',
-      'Miauler bruyamment à 3h du matin jusqu\'à ce que quelqu\'un se lève, puis l\'ignorer.',
+      "Miauler bruyamment à 3h du matin jusqu'à ce que quelqu'un se lève, puis l'ignorer.",
       'Ignorer le panier coûteux et dormir dans la boîte en carton dans laquelle il est arrivé.',
       'Réclamer de la nourriture, la renifler une fois, et repartir avec mépris.',
       'Mordre la main qui caresse, puis réclamer davantage de caresses immédiatement.',
-      'Faire entrer l\'intégralité du corps dans un contenant trois fois trop petit.',
+      "Faire entrer l'intégralité du corps dans un contenant trois fois trop petit.",
       'Pousser un stylo de la table, le regarder tomber, puis pousser un autre stylo.',
-      'Occuper le clavier de l\'ordinateur lors d\'une réunion particulièrement importante.',
+      "Occuper le clavier de l'ordinateur lors d'une réunion particulièrement importante.",
       'Fixer intensément la personne qui mange sans jamais détourner le regard.',
       'Siffler les oiseaux à travers la fenêtre avec enthousiasme et aucun résultat.',
-      'Trouver l\'endroit le plus chaud de la maison et le défendre avec acharnement.',
+      "Trouver l'endroit le plus chaud de la maison et le défendre avec acharnement.",
       'Avoir les fous furieux exactement à minuit sans raison discernable.',
       'Refuser de répondre à son prénom sauf quand de la nourriture est impliquée.',
-      'S\'asseoir directement devant la télévision lors de la scène la plus cruciale.',
+      "S'asseoir directement devant la télévision lors de la scène la plus cruciale.",
       'Miauler devant la porte fermée, entrer, miauler immédiatement pour ressortir.',
       'Passer quatre heures à se toiletter puis se rouler dans un tas de poussière.',
       'Dormir vingt heures par jour et paraître néanmoins épuisé.',
@@ -108,54 +187,71 @@ const DATA = {
       'Renverser la plante contre laquelle un complot mûrit depuis toute la semaine.',
       'Se draper dramatiquement sur le meuble le plus gênant possible.',
       'Réclamer des gratouilles, tolérer exactement deux caresses, puis attaquer.',
-      'Réveiller les humains à 5h du matin en s\'asseyant directement sur leur visage.',
-      'Trouver le seul rayon de soleil de la pièce et l\'occuper entièrement.',
-      'Hurler devant le réfrigérateur jusqu\'à ce qu\'il soit ouvert, puis décider de ne pas avoir faim.',
+      "Réveiller les humains à 5h du matin en s'asseyant directement sur leur visage.",
+      "Trouver le seul rayon de soleil de la pièce et l'occuper entièrement.",
+      "Hurler devant le réfrigérateur jusqu'à ce qu'il soit ouvert, puis décider de ne pas avoir faim.",
       'Revendiquer toutes les couvertures de la maison comme territoire personnel.',
-      'S\'installer dans l\'évier pendant trois heures malgré un panier parfaitement disponible.',
-      'Détecter que l\'humain est sur le point de partir et devenir soudainement très affectueux.',
-      'Ignorer l\'humain pendant six heures puis lui crier dessus pour manque d\'attention.',
+      "S'installer dans l'évier pendant trois heures malgré un panier parfaitement disponible.",
+      "Détecter que l'humain est sur le point de partir et devenir soudainement très affectueux.",
+      "Ignorer l'humain pendant six heures puis lui crier dessus pour manque d'attention.",
       'Voler un élastique à cheveux et le planquer sous le canapé avec les autres.',
-      'Inspecter chaque sac de courses comme s\'il s\'agissait de désamorcer une bombe.',
+      "Inspecter chaque sac de courses comme s'il s'agissait de désamorcer une bombe.",
       'Accepter les câlins à contrecœur. Prétendre ne pas les apprécier. Les apprécier quand même.',
-      'Commencer à se toiletter immédiatement après avoir été déplacé d\'un endroit confortable.',
+      "Commencer à se toiletter immédiatement après avoir été déplacé d'un endroit confortable.",
       'Laisser une quantité généreuse de poils sur chaque vêtement sombre de la maison.',
     ],
   },
-} as const
+} as const;
 
-export type Locale = keyof typeof DATA
+export type Locale = keyof typeof DATA;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function pick<T>(arr: readonly T[], rng: RNG): T {
-  return arr[Math.floor(rng() * arr.length)] as T
+  return arr[Math.floor(rng() * arr.length)] as T;
 }
 
 function shuffle<T>(arr: readonly T[], rng: RNG): T[] {
-  const copy = [...arr]
+  const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j] as T, copy[i] as T]
+    const j = Math.floor(rng() * (i + 1));
+    [copy[i], copy[j]] = [copy[j] as T, copy[i] as T];
   }
-  return copy
+  return copy;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function randomName(locale: Locale = 'en', rng: RNG = defaultRng): string {
-  return pick(DATA[locale].names, rng)
+export function randomName(
+  locale: Locale = 'en',
+  rng: RNG = defaultRng,
+): string {
+  return pick(DATA[locale].names, rng);
 }
 
-export function randomSentence(locale: Locale = 'en', rng: RNG = defaultRng): string {
-  return pick(DATA[locale].sentences, rng)
+export function randomSentence(
+  locale: Locale = 'en',
+  rng: RNG = defaultRng,
+): string {
+  return pick(DATA[locale].sentences, rng);
 }
 
-export function randomParagraph(locale: Locale = 'en', rng: RNG = defaultRng, min = 3, max = 6): string {
-  const count = min + Math.floor(rng() * (max - min + 1))
-  return shuffle(DATA[locale].sentences, rng).slice(0, count).join(' ')
+export function randomParagraph(
+  locale: Locale = 'en',
+  rng: RNG = defaultRng,
+  min = 3,
+  max = 6,
+): string {
+  const count = min + Math.floor(rng() * (max - min + 1));
+  return shuffle(DATA[locale].sentences, rng).slice(0, count).join(' ');
 }
 
-export function randomText(locale: Locale = 'en', rng: RNG = defaultRng, paragraphCount = 4): string {
-  return Array.from({ length: paragraphCount }, () => randomParagraph(locale, rng)).join('\n\n')
+export function randomText(
+  locale: Locale = 'en',
+  rng: RNG = defaultRng,
+  paragraphCount = 4,
+): string {
+  return Array.from({ length: paragraphCount }, () =>
+    randomParagraph(locale, rng),
+  ).join('\n\n');
 }

@@ -2,7 +2,8 @@
   "name": "meow-fixtures",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
   "bin": {
     "meow-fixtures": "dist/index.js"
   },
@@ -11,7 +12,13 @@
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js"
   },
-  "keywords": ["cat", "ipsum", "fixtures", "test-data", "pixel-art"],
+  "keywords": [
+    "cat",
+    "ipsum",
+    "fixtures",
+    "test-data",
+    "pixel-art"
+  ],
   "author": "Séléna",
   "license": "MIT",
   "devDependencies": {

@@ -1,6 +1,6 @@
 # meow-fixtures
 
-Generate real cat photos + cat ipsum text as test fixtures in multiple formats.
+Forget boring test data. Your fixtures now come with cats.
 
 ## Installation
 
@@ -10,15 +10,11 @@ npm install
 
 ## Scripts
 
-### Development (no build required)
-
 ```bash
+# Development (no build required)
 npm run dev generate
-```
 
-### Production
-
-```bash
+# Production
 npm run build
 npm run start generate
 ```
@@ -53,46 +49,155 @@ Generates 10 cats in all formats into `./output`.
 
 ## Examples
 
-### Choose the number of cats
+### Count
 
 ```bash
 npm run dev generate -- -n 5
 npm run dev generate -- -n 100
 ```
 
-### Choose a single format
+### Formats
 
 ```bash
+# Single format
 npm run dev generate -- -f png
 npm run dev generate -- -f jpeg
 npm run dev generate -- -f json
 npm run dev generate -- -f csv
 npm run dev generate -- -f txt
 npm run dev generate -- -f pdf
-```
+npm run dev generate -- -f sql
+npm run dev generate -- -f md
+npm run dev generate -- -f types
 
-### Choose multiple formats
-
-```bash
+# Multiple formats
 npm run dev generate -- -f png,jpeg
-npm run dev generate -- -f json,csv
-npm run dev generate -- -f txt,pdf
+npm run dev generate -- -f json,csv,sql
+npm run dev generate -- -f txt,pdf,md
 npm run dev generate -- -f png,json,pdf
 ```
 
-### Choose output directory
+### Output directory
 
 ```bash
 npm run dev generate -- -o ./my-fixtures
 npm run dev generate -- -o ./tests/fixtures
 ```
 
+### Seed — reproducible output
+
+Same seed always produces the same cats and text.
+
+```bash
+npm run dev generate -- --seed 42
+npm run dev generate -- --seed 1337
+```
+
+### Prefix — namespaced filenames
+
+```bash
+npm run dev generate -- --prefix auth
+# → auth_cat_001_Luna.png, auth_cat_002_Oreo.jpeg …
+
+npm run dev generate -- --prefix product
+npm run dev generate -- --prefix avatar
+```
+
+### Scale — PNG pixel art size
+
+```bash
+npm run dev generate -- -f png --scale 1   # 10px per pixel (tiny)
+npm run dev generate -- -f png --scale 3   # 30px per pixel (default)
+npm run dev generate -- -f png --scale 6   # 60px per pixel (large)
+```
+
+### Size — JPEG photo dimensions
+
+```bash
+npm run dev generate -- -f jpeg --size 100
+npm run dev generate -- -f jpeg --size 300   # default
+npm run dev generate -- -f jpeg --size 800
+```
+
+### Dry run — preview without writing
+
+```bash
+npm run dev generate -- --dry-run
+npm run dev generate -- -n 20 -f json,csv --dry-run
+```
+
+### Watch mode — regenerate on Enter
+
+```bash
+npm run dev generate -- --watch
+npm run dev generate -- -n 5 -f png,json --watch
+# Press Enter to regenerate, Ctrl+C to exit
+```
+
 ### Combine options
 
 ```bash
 npm run dev generate -- -n 20 -f json,csv -o ./fixtures
-npm run dev generate -- -n 50 -f png,jpeg -o ./assets/cats
-npm run dev generate -- -n 5 -f pdf -o ./docs
+npm run dev generate -- -n 5 -f png,jpeg --scale 4 --size 500
+npm run dev generate -- -n 10 -f pdf,md -o ./docs --seed 99
+npm run dev generate -- -n 3 --prefix user -f json,types -o ./tests/fixtures
+```
+
+---
+
+## .meowrc.json — default config
+
+Create a `.meowrc.json` at the root of your project to set your own defaults. CLI flags always override it.
+
+```json
+{
+  "count": 5,
+  "formats": "png,json",
+  "output": "./tests/fixtures",
+  "seed": 42,
+  "prefix": "cat",
+  "scale": 3,
+  "size": 300
+}
+```
+
+---
+
+## Programmatic API
+
+```ts
+import { generate } from 'meow-fixtures';
+
+await generate({
+  count: 5,
+  formats: ['json', 'png'],
+  output: './fixtures',
+  seed: 42,
+  prefix: 'user',
+  scale: 3,
+  size: 300,
+  dryRun: false,
+});
+```
+
+You can also use individual utilities:
+
+```ts
+import {
+  randomName,
+  randomText,
+  randomSentence,
+  fetchCatPhoto,
+  renderPng,
+  createRng,
+} from 'meow-fixtures';
+
+const rng = createRng(42);
+console.log(randomName(rng)); // 'Espresso'
+console.log(randomSentence(rng)); // 'Knock glass off table. Watch it fall.'
+
+const { pngBuffer, jpegBuffer } = await fetchCatPhoto(300);
+const pixelArt = await renderPng('00d658d50b', 3);
 ```
 
 ---
@@ -105,24 +210,27 @@ output/
   cats.csv
   cats.txt
   cats.pdf
+  cats.sql
+  cats.md
+  cats.types.ts
   images/
-    cat_001_Luna.png
-    cat_001_Luna.jpeg
-    cat_002_Mochi.png
-    cat_002_Mochi.jpeg
+    cat_001_Luna.png       ← pixel art
+    cat_001_Luna.jpeg      ← real photo
+    cat_002_Oreo.png
+    cat_002_Oreo.jpeg
     ...
 ```
 
 ### Format details
 
-| Format  | Content                                                 |
-| ------- | ------------------------------------------------------- |
-| `png`   | Pixel art cat generated from a pool of 25 343 IDs       |
-| `jpeg`  | Real cat photo fetched from cataas.com                  |
-| `json`  | Array of cats with name, text, image path and base64    |
-| `csv`   | One cat per row with name, text, image path and base64  |
-| `txt`   | Plain text with cat name and cat ipsum paragraphs       |
-| `pdf`   | Laid out pages with cat image and cat ipsum text        |
-| `sql`   | `CREATE TABLE` + `INSERT` statements                    |
-| `md`    | Markdown table + detail sections for each cat           |
-| `types` | TypeScript `Cat[]` const with full type definitions     |
+| Format  | Content                                                |
+| ------- | ------------------------------------------------------ |
+| `png`   | Pixel art cat generated from a pool of 25 343 IDs      |
+| `jpeg`  | Real cat photo fetched from cataas.com                 |
+| `json`  | Array of cats with name, text, image path and base64   |
+| `csv`   | One cat per row with name, text, image path and base64 |
+| `txt`   | Plain text with cat name and cat ipsum paragraphs      |
+| `pdf`   | Laid out pages with cat image and cat ipsum text       |
+| `sql`   | `CREATE TABLE` + `INSERT` statements                   |
+| `md`    | Markdown table + detail sections for each cat          |
+| `types` | TypeScript `Cat[]` const with full type definitions    |

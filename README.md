@@ -117,7 +117,7 @@ output/
 
 | Format  | Content                                                 |
 | ------- | ------------------------------------------------------- |
-| `png`   | Pixel art cat from the Moon-Cat collection (25 343 IDs) |
+| `png`   | Pixel art cat generated from a pool of 25 343 IDs       |
 | `jpeg`  | Real cat photo fetched from cataas.com                  |
 | `json`  | Array of cats with name, text, image path and base64    |
 | `csv`   | One cat per row with name, text, image path and base64  |

@@ -54,7 +54,7 @@ async function buildCats(
   const cats: CatFixture[] = [];
   for (let i = 0; i < count; i++) {
     const catId = randomCatId(rng);
-    // PNG  → pixel art from the real Moon-Cat ID pool
+    // PNG  → pixel art generated from the cat ID pool
     // JPEG → real cat photo fetched from cataas.com
     const [pngBuffer, { jpegBuffer }] = await Promise.all([
       renderPng(catId, scale),

@@ -9,7 +9,7 @@ type RGB = [number, number, number];
 type Pixel = RGB | null;
 type ImageGrid = Pixel[][];
 
-// ── Cat ID pool (25 343 real Moon-Cat IDs) ────────────────────────────────────
+// ── Cat ID pool ───────────────────────────────────────────────────────────────
 
 let _catIdPool: string[] | null = null;
 
@@ -26,7 +26,7 @@ function getCatIdPool(): string[] {
 }
 
 /**
- * Picks a random cat ID from the real Moon-Cat collection (25 343 IDs).
+ * Picks a random cat ID from the pool (25 343 IDs).
  * Falls back to a freshly generated ID if the data file is unavailable.
  */
 export function randomCatId(rng: RNG = defaultRng): string {

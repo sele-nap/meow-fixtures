@@ -1,6 +1,7 @@
 import http from 'http';
 import https from 'https';
 import Jimp from 'jimp';
+import { RNG, defaultRng } from './rng';
 
 // ── HTTP helpers ──────────────────────────────────────────────────────────────
 
@@ -53,12 +54,15 @@ function downloadBuffer(url: string, maxRedirects = 5): Promise<Buffer> {
  * a JPEG buffer (original) and a PNG buffer (converted via jimp).
  *
  * @param size  Square dimension in pixels (default 300).
+ * @param rng   RNG used as a cache-buster — pass a seeded RNG for reproducible photos.
  */
 export async function fetchCatPhoto(
   size = 300,
+  rng: RNG = defaultRng,
 ): Promise<{ pngBuffer: Buffer; jpegBuffer: Buffer }> {
-  // Cache-buster so every call gets a fresh random cat
-  const url = `https://cataas.com/cat?width=${size}&height=${size}&_=${Date.now()}`;
+  // Cache-buster so every call gets a fresh random cat (seeded so it's reproducible)
+  const cacheBuster = Math.floor(rng() * 1e9);
+  const url = `https://cataas.com/cat?width=${size}&height=${size}&_=${cacheBuster}`;
 
   const jpegBuffer = await downloadBuffer(url);
 
@@ -67,13 +71,4 @@ export async function fetchCatPhoto(
   const pngBuffer = await img.getBufferAsync(Jimp.MIME_PNG);
 
   return { pngBuffer, jpegBuffer };
-}
-
-/**
- * Generates a random 5-character hex ID (replaces the old catId system).
- */
-export function randomPhotoId(): string {
-  return Math.floor(Math.random() * 0xfffff)
-    .toString(16)
-    .padStart(5, '0');
 }

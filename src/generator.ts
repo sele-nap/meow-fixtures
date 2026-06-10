@@ -58,7 +58,7 @@ async function buildCats(
     // JPEG → real cat photo fetched from cataas.com
     const [pngBuffer, { jpegBuffer }] = await Promise.all([
       renderPng(catId, scale),
-      fetchCatPhoto(size),
+      fetchCatPhoto(size, rng),
     ]);
     cats.push({
       index: i + 1,
@@ -113,7 +113,7 @@ export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
   console.log(`Fetching ${count} cat photo(s) from cataas.com…`);
   for (let i = 0; i < count; i++) {
     const name = randomName(rng);
-    const { jpegBuffer } = await fetchCatPhoto(size);
+    const { jpegBuffer } = await fetchCatPhoto(size, rng);
     const p = prefix ? `${prefix}_` : '';
     const filename = `${p}cat_${String(i + 1).padStart(3, '0')}_${name}.jpg`;
     fs.writeFileSync(path.join(output, filename), jpegBuffer);

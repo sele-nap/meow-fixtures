@@ -50,6 +50,33 @@ function dataFileFormats(formats: string[]): string[] {
   return formats.filter((f) => !IMAGE_FORMATS.includes(f));
 }
 
+// ── Concurrency ───────────────────────────────────────────────────────────────
+
+// Number of cataas.com requests to have in flight at once.
+const FETCH_CONCURRENCY = 5;
+
+/**
+ * Runs `fn` over `items` with at most `limit` calls in flight at once,
+ * returning results in the same order as `items`.
+ */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i] as T, i);
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, items.length) }, worker);
+  await Promise.all(workers);
+  return results;
+}
+
 // ── Data building ────────────────────────────────────────────────────────────
 
 async function buildCats(
@@ -58,25 +85,41 @@ async function buildCats(
 ): Promise<CatFixture[]> {
   const { count, size, scale } = options;
   console.log(`Generating ${count} cat(s)…`);
-  const cats: CatFixture[] = [];
-  for (let i = 0; i < count; i++) {
-    const catId = randomCatId(rng);
-    // PNG  → pixel art generated from the cat ID pool
-    // JPEG → real cat photo fetched from cataas.com
-    const [pngBuffer, { jpegBuffer }] = await Promise.all([
-      renderPng(catId, scale),
-      fetchCatPhoto(size, rng),
-    ]);
-    cats.push({
-      index: i + 1,
-      id: catId,
-      name: randomName(rng),
-      text: randomText(rng, 4),
-      pngBuffer,
-      jpegBuffer,
-    });
-    process.stdout.write(`\r  ${i + 1}/${count}`);
-  }
+
+  // RNG-derived values are precomputed sequentially so the output stays
+  // reproducible regardless of how the concurrent fetches below complete.
+  // Note: the cataas.com photo itself is never reproducible — the API
+  // returns a random cat regardless of query params — so it isn't seeded.
+  const plans = Array.from({ length: count }, (_, i) => ({
+    index: i + 1,
+    catId: randomCatId(rng),
+    name: randomName(rng),
+    text: randomText(rng, 4),
+  }));
+
+  let done = 0;
+  const cats = await mapWithConcurrency(
+    plans,
+    FETCH_CONCURRENCY,
+    async (plan): Promise<CatFixture> => {
+      // PNG  → pixel art generated from the cat ID pool
+      // JPEG → real cat photo fetched from cataas.com
+      const [pngBuffer, { jpegBuffer }] = await Promise.all([
+        renderPng(plan.catId, scale),
+        fetchCatPhoto(size),
+      ]);
+      done++;
+      process.stdout.write(`\r  ${done}/${count}`);
+      return {
+        index: plan.index,
+        id: plan.catId,
+        name: plan.name,
+        text: plan.text,
+        pngBuffer,
+        jpegBuffer,
+      };
+    },
+  );
   console.log();
   return cats;
 }
@@ -118,14 +161,25 @@ export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
   fs.mkdirSync(output, { recursive: true });
 
   console.log(`Fetching ${count} cat photo(s) from cataas.com…`);
-  for (let i = 0; i < count; i++) {
-    const name = randomName(rng);
-    const { jpegBuffer } = await fetchCatPhoto(size, rng);
+
+  // RNG-derived values are precomputed sequentially so filenames stay
+  // reproducible regardless of how the concurrent fetches below complete.
+  // Note: the cataas.com photo itself is never reproducible — the API
+  // returns a random cat regardless of query params — so it isn't seeded.
+  const plans = Array.from({ length: count }, (_, i) => ({
+    index: i + 1,
+    name: randomName(rng),
+  }));
+
+  let done = 0;
+  await mapWithConcurrency(plans, FETCH_CONCURRENCY, async (plan) => {
+    const { jpegBuffer } = await fetchCatPhoto(size);
     const p = prefix ? `${prefix}_` : '';
-    const filename = `${p}cat_${String(i + 1).padStart(3, '0')}_${name}.jpg`;
+    const filename = `${p}cat_${String(plan.index).padStart(3, '0')}_${plan.name}.jpg`;
     fs.writeFileSync(path.join(output, filename), jpegBuffer);
-    process.stdout.write(`\r  ${i + 1}/${count}`);
-  }
+    done++;
+    process.stdout.write(`\r  ${done}/${count}`);
+  });
   console.log();
   console.log(`\nDone! ${count} photo(s) written to: ${output}`);
 }

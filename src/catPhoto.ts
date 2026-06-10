@@ -1,7 +1,6 @@
 import http from 'http';
 import https from 'https';
 import Jimp from 'jimp';
-import { RNG, defaultRng } from './rng';
 
 // ── HTTP helpers ──────────────────────────────────────────────────────────────
 
@@ -53,16 +52,16 @@ function downloadBuffer(url: string, maxRedirects = 5): Promise<Buffer> {
  * Fetches a random cat photo from cataas.com and returns it as both
  * a JPEG buffer (original) and a PNG buffer (converted via jimp).
  *
+ * Note: cataas.com returns a random photo on every request regardless of
+ * query params, so this is never reproducible — even with a seeded RNG.
+ *
  * @param size  Square dimension in pixels (default 300).
- * @param rng   RNG used as a cache-buster — pass a seeded RNG for reproducible photos.
  */
 export async function fetchCatPhoto(
   size = 300,
-  rng: RNG = defaultRng,
 ): Promise<{ pngBuffer: Buffer; jpegBuffer: Buffer }> {
-  // Cache-buster so every call gets a fresh random cat (seeded so it's reproducible)
-  const cacheBuster = Math.floor(rng() * 1e9);
-  const url = `https://cataas.com/cat?width=${size}&height=${size}&_=${cacheBuster}`;
+  // Cache-buster so every call gets a fresh random cat
+  const url = `https://cataas.com/cat?width=${size}&height=${size}&_=${Date.now()}`;
 
   const jpegBuffer = await downloadBuffer(url);
 

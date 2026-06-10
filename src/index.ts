@@ -178,6 +178,13 @@ yargs(process.argv.slice(2))
 // ── Watch mode ────────────────────────────────────────────────────────────────
 
 async function watchMode(options: GenerateOptions): Promise<void> {
+  if (!process.stdin.isTTY) {
+    console.warn(
+      '[meow-fixtures] --watch requires an interactive terminal — ignoring',
+    );
+    return;
+  }
+
   const rl = readline.createInterface({ input: process.stdin });
   process.stdin.setRawMode(true);
 

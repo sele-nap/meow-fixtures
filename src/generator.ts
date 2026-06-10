@@ -156,7 +156,7 @@ export async function generate(options: GenerateOptions): Promise<void> {
 
   if (formats.includes('json')) writeJson(cats, output, prefix);
   if (formats.includes('csv')) writeCsv(cats, output, prefix);
-  if (formats.includes('txt')) writeTxt(cats, output, prefix);
+  if (formats.includes('txt')) writeTxt(cats, output);
   if (formats.includes('sql')) writeSql(cats, output, prefix);
   if (formats.includes('md')) writeMd(cats, output, prefix);
   if (formats.includes('types')) writeTypes(cats, output, prefix);
@@ -247,7 +247,7 @@ function writeCsv(cats: CatFixture[], output: string, prefix?: string): void {
 
 // ── TXT ───────────────────────────────────────────────────────────────────────
 
-function writeTxt(cats: CatFixture[], output: string, _prefix?: string): void {
+function writeTxt(cats: CatFixture[], output: string): void {
   const border = '═'.repeat(60);
   const content = cats
     .map((cat) =>

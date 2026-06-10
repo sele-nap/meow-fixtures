@@ -79,6 +79,50 @@ function catFilename(cat: CatFixture, ext: string, prefix?: string): string {
   return `${p}cat_${String(cat.index).padStart(3, '0')}_${cat.name}.${ext}`;
 }
 
+// ── Jpg ──────────────────────────────────────────────────────────────────────
+
+export interface GenerateJpgOptions {
+  count: number;
+  output: string;
+  seed?: number;
+  prefix?: string;
+  /** JPEG photo size in pixels — square (cataas.com). Default: 300. */
+  size: number;
+  dryRun: boolean;
+}
+
+/** Fetches real cat photos (JPEG) from cataas.com and saves them to disk. */
+export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
+  const { count, output, seed, prefix, size, dryRun } = options;
+  const rng: RNG = seed !== undefined ? createRng(seed) : defaultRng;
+
+  if (dryRun) {
+    console.log('\n[Dry run] — no files will be written\n');
+    console.log(`  count  : ${count}`);
+    console.log(`  output : ${output}`);
+    console.log(`  size   : ${size}×${size}px`);
+    if (seed !== undefined) console.log(`  seed   : ${seed}`);
+    if (prefix) console.log(`  prefix : ${prefix}`);
+    console.log('\nFiles that would be generated:');
+    console.log(`  ${output}/  (${count} × .jpg)`);
+    return;
+  }
+
+  fs.mkdirSync(output, { recursive: true });
+
+  console.log(`Fetching ${count} cat photo(s) from cataas.com…`);
+  for (let i = 0; i < count; i++) {
+    const name = randomName(rng);
+    const { jpegBuffer } = await fetchCatPhoto(size);
+    const p = prefix ? `${prefix}_` : '';
+    const filename = `${p}cat_${String(i + 1).padStart(3, '0')}_${name}.jpg`;
+    fs.writeFileSync(path.join(output, filename), jpegBuffer);
+    process.stdout.write(`\r  ${i + 1}/${count}`);
+  }
+  console.log();
+  console.log(`\nDone! ${count} photo(s) written to: ${output}`);
+}
+
 // ── Main entry ───────────────────────────────────────────────────────────────
 
 export async function generate(options: GenerateOptions): Promise<void> {
@@ -337,36 +381,23 @@ async function writePdf(
   output: string,
   _prefix?: string,
 ): Promise<void> {
-  const doc = new PDFDocument({ margin: 50, size: 'A4', autoFirstPage: true });
+  // bufferPages lets us go back and stamp page numbers once the full
+  // document — including any auto-paginated overflow — has been laid out.
+  const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
   const out = fs.createWriteStream(path.join(output, 'cats.pdf'));
   doc.pipe(out);
 
   const pageW = (doc.page.width as number) - 100; // 495 on A4
-  const pageH = doc.page.height as number;
-  const imgSize = 110;
+  const imgSize = 150;
 
   cats.forEach((cat, i) => {
     if (i > 0) doc.addPage();
 
-    // ── Header ──────────────────────────────────────────────────────────────
-    doc.roundedRect(50, 50, pageW, 48, 6).fill('#f5f5f5');
-    doc
-      .fillColor('#333333')
-      .fontSize(20)
-      .font('Helvetica-Bold')
-      .text(cat.name, 60, 58, {
-        width: pageW - imgSize - 24,
-        lineBreak: false,
-      });
-    doc
-      .fillColor('#999999')
-      .fontSize(9)
-      .font('Helvetica')
-      .text(`id: ${cat.id}`, 60, 80, { lineBreak: false });
-
-    // ── Cat image (safe — ignore if buffer is unreadable) ───────────────────
+    // ── Cat image — centered, on its own ────────────────────────────────────
+    const imgX = ((doc.page.width as number) - imgSize) / 2;
+    const imgY = doc.y;
     try {
-      doc.image(cat.pngBuffer, 50 + pageW - imgSize, 48, {
+      doc.image(cat.pngBuffer, imgX, imgY, {
         width: imgSize,
         height: imgSize,
         fit: [imgSize, imgSize],
@@ -374,36 +405,55 @@ async function writePdf(
     } catch (_) {
       /* skip broken image */
     }
+    doc.y = imgY + imgSize + 18;
 
-    // ── Body text ────────────────────────────────────────────────────────────
-    // Explicitly set cursor below the header — never rely on implicit state
-    // after image() or absolute text() calls.
-    const bodyTop = 114;
-    doc.y = bodyTop;
-    doc.fillColor('#222222').fontSize(10.5).font('Helvetica');
+    // ── Title ────────────────────────────────────────────────────────────────
+    doc
+      .fillColor('#222222')
+      .fontSize(22)
+      .font('Helvetica-Bold')
+      .text(cat.name, { align: 'center' });
+    doc
+      .fillColor('#999999')
+      .fontSize(9)
+      .font('Helvetica')
+      .text(`id: ${cat.id}`, { align: 'center' });
+    doc.moveDown(0.8);
 
+    // ── Divider ──────────────────────────────────────────────────────────────
+    doc
+      .moveTo(50, doc.y)
+      .lineTo(50 + pageW, doc.y)
+      .strokeColor('#e5e5e5')
+      .lineWidth(1)
+      .stroke();
+    doc.moveDown(1.2);
+
+    // ── Body text — flows naturally below, never overlaps the image ────────
+    doc.fillColor('#333333').fontSize(11).font('Helvetica');
     const paragraphs = cat.text.split('\n\n');
     paragraphs.forEach((para, pi) => {
-      // stop writing if we're too close to the footer zone
-      if (doc.y > pageH - 60) return;
-      doc.text(para, 50, doc.y, {
-        width: pageW,
-        align: 'justify',
-        lineBreak: true,
-      });
-      if (pi < paragraphs.length - 1) doc.moveDown(0.7);
+      doc.text(para, { width: pageW, align: 'justify' });
+      if (pi < paragraphs.length - 1) doc.moveDown(0.8);
     });
+  });
 
-    // ── Footer ───────────────────────────────────────────────────────────────
+  // ── Page numbers — stamped after layout, safely inside page bounds ───────
+  const range = doc.bufferedPageRange();
+  for (let p = range.start; p < range.start + range.count; p++) {
+    doc.switchToPage(p);
+    const bottomMargin = doc.page.margins.bottom;
+    doc.page.margins.bottom = 0; // avoid triggering an extra auto page
     doc
       .fillColor('#bbbbbb')
       .fontSize(8)
-      .text(`${i + 1} / ${cats.length}`, 50, pageH - 38, {
+      .text(`${p + 1} / ${range.count}`, 50, (doc.page.height as number) - 40, {
         align: 'center',
         width: pageW,
         lineBreak: false,
       });
-  });
+    doc.page.margins.bottom = bottomMargin;
+  }
 
   doc.end();
   await new Promise<void>((resolve, reject) => {

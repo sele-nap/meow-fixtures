@@ -4,7 +4,13 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import yargs from 'yargs';
-import { ALL_FORMATS, generate, GenerateOptions } from './generator';
+import {
+  ALL_FORMATS,
+  generate,
+  generateJpg,
+  GenerateJpgOptions,
+  GenerateOptions,
+} from './generator';
 
 // ── .meowrc.json ──────────────────────────────────────────────────────────────
 
@@ -109,6 +115,59 @@ yargs(process.argv.slice(2))
       if (argv.watch) {
         await watchMode(options);
       }
+    },
+  )
+
+  .command(
+    'jpg',
+    'Download real cat photos (JPEG) from cataas.com',
+    (y) =>
+      y
+        .option('count', {
+          alias: 'n',
+          type: 'number',
+          default: rc.count ?? 10,
+          describe: 'Number of photos to download',
+        })
+        .option('output', {
+          alias: 'o',
+          type: 'string',
+          default: rc.output ?? './output',
+          describe: 'Output directory',
+        })
+        .option('seed', {
+          alias: 's',
+          type: 'number',
+          default: rc.seed,
+          describe: 'Random seed for reproducible filenames (cat names)',
+        })
+        .option('prefix', {
+          alias: 'p',
+          type: 'string',
+          default: rc.prefix,
+          describe: 'Prefix for output filenames (e.g. "auth", "product")',
+        })
+        .option('size', {
+          type: 'number',
+          default: rc.size ?? 300,
+          describe: 'Photo size in pixels — square (e.g. 300 = 300×300)',
+        })
+        .option('dry-run', {
+          type: 'boolean',
+          default: rc.dryRun ?? false,
+          describe: 'Preview what would be downloaded without writing files',
+        }),
+    async (argv) => {
+      const options: GenerateJpgOptions = {
+        count: argv.count,
+        output: argv.output,
+        seed: argv.seed,
+        prefix: argv.prefix,
+        size: argv.size,
+        dryRun: argv['dry-run'],
+      };
+
+      await generateJpg(options);
     },
   )
 

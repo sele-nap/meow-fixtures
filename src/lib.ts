@@ -6,8 +6,13 @@
 //   import { generate } from 'meow-fixtures'
 //   await generate({ count: 10, formats: ['json', 'sql'], output: './fixtures' })
 
-export { ALL_FORMATS, generate } from './generator';
-export type { CatFixture, Format, GenerateOptions } from './generator';
+export { ALL_FORMATS, generate, generateJpg } from './generator';
+export type {
+  CatFixture,
+  Format,
+  GenerateJpgOptions,
+  GenerateOptions,
+} from './generator';
 
 export {
   randomName,

@@ -145,6 +145,39 @@ npm run dev generate -- -n 3 --prefix user -f json,types -o ./tests/fixtures
 
 ---
 
+## Jpg — download real cat photos
+
+Download standalone real cat photos (JPEG) from cataas.com, no fixtures generated.
+
+```bash
+npm run dev jpg
+```
+
+Downloads 10 photos into `./output`.
+
+### Options
+
+| Option      | Alias | Default    | Description                                             |
+| ----------- | ----- | ---------- | ------------------------------------------------------- |
+| `--count`   | `-n`  | `10`       | Number of photos to download                            |
+| `--output`  | `-o`  | `./output` | Output directory                                        |
+| `--seed`    | `-s`  | —          | Random seed for reproducible filenames (cat names)      |
+| `--prefix`  | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna.jpg`) |
+| `--size`    |       | `300`      | Photo size in pixels — square (e.g. `500×500`)          |
+| `--dry-run` |       | `false`    | Preview what would be downloaded without writing files  |
+
+### Examples
+
+```bash
+npm run dev jpg -- -n 5
+npm run dev jpg -- -n 20 -o ./my-photos
+npm run dev jpg -- --size 800
+npm run dev jpg -- --seed 42 --prefix avatar
+npm run dev jpg -- --dry-run
+```
+
+---
+
 ## .meowrc.json — default config
 
 Create a `.meowrc.json` at the root of your project to set your own defaults. CLI flags always override it.

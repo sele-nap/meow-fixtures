@@ -7,8 +7,13 @@
   "bin": {
     "meow-fixtures": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "data"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js"
   },

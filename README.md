@@ -35,7 +35,7 @@ Generates 1 cat in all formats into `./output`.
 
 | Option          | Alias | Default    | Description                                             |
 | --------------- | ----- | ---------- | ------------------------------------------------------- |
-| `--count`       | `-n`  | `1`        | Number of cats to generate                              |
+| `--count`       | `-n`  | `1`\*      | Number of cats to generate                              |
 | `--formats`     | `-f`  | `all`      | Comma-separated list of formats (or `all`)              |
 | `--output`      | `-o`  | `./output` | Output directory                                        |
 | `--seed`        | `-s`  | —          | Random seed for reproducible output                     |
@@ -46,6 +46,9 @@ Generates 1 cat in all formats into `./output`.
 | `--concurrency` |       | `5`        | Number of cataas.com requests to have in flight at once |
 | `--no-base64`   |       | `false`    | Omit base64 image data from json/csv/types output       |
 | `--watch`       | `-w`  | `false`    | Re-generate on Enter keypress (Ctrl+C to exit)          |
+
+\* `--count` defaults to `2` when `--formats` includes `pdf` (so the PDF has more
+than a single page by default).
 
 ---
 

@@ -44,8 +44,9 @@ yargs(process.argv.slice(2))
         .option('count', {
           alias: 'n',
           type: 'number',
-          default: rc.count ?? 1,
-          describe: 'Number of cats to generate',
+          default: rc.count,
+          describe:
+            'Number of cats to generate (default: 1, or 2 if formats includes pdf)',
         })
         .option('formats', {
           alias: 'f',
@@ -110,8 +111,10 @@ yargs(process.argv.slice(2))
           ? [...ALL_FORMATS]
           : formatsRaw.split(',').map((f) => f.trim().toLowerCase());
 
+      const count = argv.count ?? (formats.includes('pdf') ? 2 : 1);
+
       const options: GenerateOptions = {
-        count: argv.count,
+        count,
         formats,
         output: argv.output,
         seed: argv.seed,

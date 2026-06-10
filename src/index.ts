@@ -6,6 +6,7 @@ import readline from 'readline';
 import yargs from 'yargs';
 import {
   ALL_FORMATS,
+  DEFAULT_CONCURRENCY,
   generate,
   generateJpg,
   GenerateJpgOptions,
@@ -86,6 +87,16 @@ yargs(process.argv.slice(2))
           default: rc.dryRun ?? false,
           describe: 'Preview what would be generated without writing any files',
         })
+        .option('concurrency', {
+          type: 'number',
+          default: rc.concurrency ?? DEFAULT_CONCURRENCY,
+          describe: 'Number of cataas.com requests to have in flight at once',
+        })
+        .option('base64', {
+          type: 'boolean',
+          default: rc.includeBase64 ?? true,
+          describe: 'Include base64-encoded images in json/csv/types output',
+        })
         .option('watch', {
           alias: 'w',
           type: 'boolean',
@@ -108,6 +119,8 @@ yargs(process.argv.slice(2))
         scale: argv.scale,
         size: argv.size,
         dryRun: argv['dry-run'],
+        concurrency: argv.concurrency,
+        includeBase64: argv.base64,
       };
 
       await generate(options);
@@ -156,6 +169,11 @@ yargs(process.argv.slice(2))
           type: 'boolean',
           default: rc.dryRun ?? false,
           describe: 'Preview what would be downloaded without writing files',
+        })
+        .option('concurrency', {
+          type: 'number',
+          default: rc.concurrency ?? DEFAULT_CONCURRENCY,
+          describe: 'Number of cataas.com requests to have in flight at once',
         }),
     async (argv) => {
       const options: GenerateJpgOptions = {
@@ -165,6 +183,7 @@ yargs(process.argv.slice(2))
         prefix: argv.prefix,
         size: argv.size,
         dryRun: argv['dry-run'],
+        concurrency: argv.concurrency,
       };
 
       await generateJpg(options);

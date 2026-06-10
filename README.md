@@ -33,17 +33,19 @@ Generates 10 cats in all formats into `./output`.
 
 ### Options
 
-| Option      | Alias | Default    | Description                                           |
-| ----------- | ----- | ---------- | ----------------------------------------------------- |
-| `--count`   | `-n`  | `10`       | Number of cats to generate                            |
-| `--formats` | `-f`  | `all`      | Comma-separated list of formats (or `all`)            |
-| `--output`  | `-o`  | `./output` | Output directory                                      |
-| `--seed`    | `-s`  | —          | Random seed for reproducible output                   |
-| `--prefix`  | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna`)   |
-| `--scale`   |       | `3`        | PNG pixel art scale (1 = 10px/pixel, 3 = 30px/pixel)  |
-| `--size`    |       | `300`      | JPEG photo size in pixels — square (e.g. `500×500`)   |
-| `--dry-run` |       | `false`    | Preview what would be generated without writing files |
-| `--watch`   | `-w`  | `false`    | Re-generate on Enter keypress (Ctrl+C to exit)        |
+| Option          | Alias | Default    | Description                                             |
+| --------------- | ----- | ---------- | ------------------------------------------------------- |
+| `--count`       | `-n`  | `10`       | Number of cats to generate                              |
+| `--formats`     | `-f`  | `all`      | Comma-separated list of formats (or `all`)              |
+| `--output`      | `-o`  | `./output` | Output directory                                        |
+| `--seed`        | `-s`  | —          | Random seed for reproducible output                     |
+| `--prefix`      | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna`)     |
+| `--scale`       |       | `3`        | PNG pixel art scale (1 = 10px/pixel, 3 = 30px/pixel)    |
+| `--size`        |       | `300`      | JPEG photo size in pixels — square (e.g. `500×500`)     |
+| `--dry-run`     |       | `false`    | Preview what would be generated without writing files   |
+| `--concurrency` |       | `5`        | Number of cataas.com requests to have in flight at once |
+| `--no-base64`   |       | `false`    | Omit base64 image data from json/csv/types output       |
+| `--watch`       | `-w`  | `false`    | Re-generate on Enter keypress (Ctrl+C to exit)          |
 
 ---
 
@@ -161,14 +163,15 @@ Downloads 10 photos into `./output`.
 
 ### Options
 
-| Option      | Alias | Default    | Description                                             |
-| ----------- | ----- | ---------- | ------------------------------------------------------- |
-| `--count`   | `-n`  | `10`       | Number of photos to download                            |
-| `--output`  | `-o`  | `./output` | Output directory                                        |
-| `--seed`    | `-s`  | —          | Random seed for reproducible filenames (cat names)      |
-| `--prefix`  | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna.jpg`) |
-| `--size`    |       | `300`      | Photo size in pixels — square (e.g. `500×500`)          |
-| `--dry-run` |       | `false`    | Preview what would be downloaded without writing files  |
+| Option          | Alias | Default    | Description                                             |
+| --------------- | ----- | ---------- | ------------------------------------------------------- |
+| `--count`       | `-n`  | `10`       | Number of photos to download                            |
+| `--output`      | `-o`  | `./output` | Output directory                                        |
+| `--seed`        | `-s`  | —          | Random seed for reproducible filenames (cat names)      |
+| `--prefix`      | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna.jpg`) |
+| `--size`        |       | `300`      | Photo size in pixels — square (e.g. `500×500`)          |
+| `--dry-run`     |       | `false`    | Preview what would be downloaded without writing files  |
+| `--concurrency` |       | `5`        | Number of cataas.com requests to have in flight at once |
 
 ### Examples
 
@@ -194,7 +197,9 @@ Create a `.meowrc.json` at the root of your project to set your own defaults. CL
   "seed": 42,
   "prefix": "cat",
   "scale": 3,
-  "size": 300
+  "size": 300,
+  "concurrency": 5,
+  "includeBase64": true
 }
 ```
 
@@ -260,14 +265,17 @@ output/
 
 ### Format details
 
-| Format  | Content                                                |
-| ------- | ------------------------------------------------------ |
-| `png`   | Pixel art cat generated from a pool of 25 343 IDs      |
-| `jpeg`  | Real cat photo fetched from cataas.com (not seedable)  |
-| `json`  | Array of cats with name, text, image path and base64   |
-| `csv`   | One cat per row with name, text, image path and base64 |
-| `txt`   | Plain text with cat name and cat ipsum paragraphs      |
-| `pdf`   | Laid out pages with cat image and cat ipsum text       |
-| `sql`   | `CREATE TABLE` + `INSERT` statements                   |
-| `md`    | Markdown table + detail sections for each cat          |
-| `types` | TypeScript `Cat[]` const with full type definitions    |
+| Format  | Content                                                  |
+| ------- | -------------------------------------------------------- |
+| `png`   | Pixel art cat generated from a pool of 25 343 IDs        |
+| `jpeg`  | Real cat photo fetched from cataas.com (not seedable)    |
+| `json`  | Array of cats with name, text, image path and base64\*   |
+| `csv`   | One cat per row with name, text, image path and base64\* |
+| `txt`   | Plain text with cat name and cat ipsum paragraphs        |
+| `pdf`   | Laid out pages with cat image and cat ipsum text         |
+| `sql`   | `CREATE TABLE` + `INSERT` statements                     |
+| `md`    | Markdown table + detail sections for each cat            |
+| `types` | TypeScript `Cat[]` const with full type definitions      |
+
+\* Use `--no-base64` to omit the base64 image data (`json`, `csv`, `types`) — useful for large
+batches where you only need the file paths.

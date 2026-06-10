@@ -6,7 +6,12 @@
 //   import { generate } from 'meow-fixtures'
 //   await generate({ count: 10, formats: ['json', 'sql'], output: './fixtures' })
 
-export { ALL_FORMATS, generate, generateJpg } from './generator';
+export {
+  ALL_FORMATS,
+  DEFAULT_CONCURRENCY,
+  generate,
+  generateJpg,
+} from './generator';
 export type {
   CatFixture,
   Format,

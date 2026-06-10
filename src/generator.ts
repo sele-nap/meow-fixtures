@@ -28,6 +28,10 @@ export interface GenerateOptions {
   /** PNG pixel art scale multiplier (1 = 10px/pixel). Default: 3. */
   scale: number;
   dryRun: boolean;
+  /** Number of cataas.com requests to have in flight at once. Default: 5. */
+  concurrency?: number;
+  /** Include base64-encoded images in json/csv/types output. Default: true. */
+  includeBase64?: boolean;
 }
 
 export const ALL_FORMATS = [
@@ -52,8 +56,8 @@ function dataFileFormats(formats: string[]): string[] {
 
 // ── Concurrency ───────────────────────────────────────────────────────────────
 
-// Number of cataas.com requests to have in flight at once.
-const FETCH_CONCURRENCY = 5;
+// Default number of cataas.com requests to have in flight at once.
+export const DEFAULT_CONCURRENCY = 5;
 
 /**
  * Runs `fn` over `items` with at most `limit` calls in flight at once,
@@ -83,7 +87,7 @@ async function buildCats(
   options: GenerateOptions,
   rng: RNG,
 ): Promise<CatFixture[]> {
-  const { count, size, scale } = options;
+  const { count, size, scale, concurrency = DEFAULT_CONCURRENCY } = options;
   console.log(`Generating ${count} cat(s)…`);
 
   // RNG-derived values are precomputed sequentially so the output stays
@@ -100,7 +104,7 @@ async function buildCats(
   let done = 0;
   const cats = await mapWithConcurrency(
     plans,
-    FETCH_CONCURRENCY,
+    concurrency,
     async (plan): Promise<CatFixture> => {
       // PNG  → pixel art generated from the cat ID pool
       // JPEG → real cat photo fetched from cataas.com
@@ -139,11 +143,21 @@ export interface GenerateJpgOptions {
   /** JPEG photo size in pixels — square (cataas.com). Default: 300. */
   size: number;
   dryRun: boolean;
+  /** Number of cataas.com requests to have in flight at once. Default: 5. */
+  concurrency?: number;
 }
 
 /** Fetches real cat photos (JPEG) from cataas.com and saves them to disk. */
 export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
-  const { count, output, seed, prefix, size, dryRun } = options;
+  const {
+    count,
+    output,
+    seed,
+    prefix,
+    size,
+    dryRun,
+    concurrency = DEFAULT_CONCURRENCY,
+  } = options;
   const rng: RNG = seed !== undefined ? createRng(seed) : defaultRng;
 
   if (dryRun) {
@@ -172,7 +186,7 @@ export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
   }));
 
   let done = 0;
-  await mapWithConcurrency(plans, FETCH_CONCURRENCY, async (plan) => {
+  await mapWithConcurrency(plans, concurrency, async (plan) => {
     const { jpegBuffer } = await fetchCatPhoto(size);
     const p = prefix ? `${prefix}_` : '';
     const filename = `${p}cat_${String(plan.index).padStart(3, '0')}_${plan.name}.jpg`;
@@ -187,7 +201,14 @@ export async function generateJpg(options: GenerateJpgOptions): Promise<void> {
 // ── Main entry ───────────────────────────────────────────────────────────────
 
 export async function generate(options: GenerateOptions): Promise<void> {
-  const { formats, output, seed, prefix, dryRun } = options;
+  const {
+    formats,
+    output,
+    seed,
+    prefix,
+    dryRun,
+    includeBase64 = true,
+  } = options;
   const rng: RNG = seed !== undefined ? createRng(seed) : defaultRng;
 
   if (dryRun) {
@@ -215,12 +236,13 @@ export async function generate(options: GenerateOptions): Promise<void> {
     }
   }
 
-  if (formats.includes('json')) writeJson(cats, output, prefix);
-  if (formats.includes('csv')) writeCsv(cats, output, prefix);
+  if (formats.includes('json')) writeJson(cats, output, prefix, includeBase64);
+  if (formats.includes('csv')) writeCsv(cats, output, prefix, includeBase64);
   if (formats.includes('txt')) writeTxt(cats, output);
   if (formats.includes('sql')) writeSql(cats, output, prefix);
   if (formats.includes('md')) writeMd(cats, output, prefix);
-  if (formats.includes('types')) writeTypes(cats, output, prefix);
+  if (formats.includes('types'))
+    writeTypes(cats, output, prefix, includeBase64);
   if (formats.includes('pdf')) await writePdf(cats, output, prefix);
 
   printSummary(cats, formats, output);
@@ -248,7 +270,12 @@ function printDryRun(options: GenerateOptions): void {
 
 // ── JSON ──────────────────────────────────────────────────────────────────────
 
-function writeJson(cats: CatFixture[], output: string, prefix?: string): void {
+function writeJson(
+  cats: CatFixture[],
+  output: string,
+  prefix?: string,
+  includeBase64 = true,
+): void {
   const data = cats.map((cat) => ({
     index: cat.index,
     id: cat.id,
@@ -257,11 +284,11 @@ function writeJson(cats: CatFixture[], output: string, prefix?: string): void {
     images: {
       png: {
         path: `images/${catFilename(cat, 'png', prefix)}`,
-        base64: cat.pngBuffer.toString('base64'),
+        ...(includeBase64 ? { base64: cat.pngBuffer.toString('base64') } : {}),
       },
       jpeg: {
         path: `images/${catFilename(cat, 'jpeg', prefix)}`,
-        base64: cat.jpegBuffer.toString('base64'),
+        ...(includeBase64 ? { base64: cat.jpegBuffer.toString('base64') } : {}),
       },
     },
   }));
@@ -273,7 +300,12 @@ function writeJson(cats: CatFixture[], output: string, prefix?: string): void {
 
 // ── CSV ───────────────────────────────────────────────────────────────────────
 
-function writeCsv(cats: CatFixture[], output: string, prefix?: string): void {
+function writeCsv(
+  cats: CatFixture[],
+  output: string,
+  prefix?: string,
+  includeBase64 = true,
+): void {
   const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
   const header = [
     'index',
@@ -282,8 +314,7 @@ function writeCsv(cats: CatFixture[], output: string, prefix?: string): void {
     'text',
     'png_path',
     'jpeg_path',
-    'png_base64',
-    'jpeg_base64',
+    ...(includeBase64 ? ['png_base64', 'jpeg_base64'] : []),
   ];
   const rows = cats.map((cat) =>
     [
@@ -293,8 +324,9 @@ function writeCsv(cats: CatFixture[], output: string, prefix?: string): void {
       cat.text,
       `images/${catFilename(cat, 'png', prefix)}`,
       `images/${catFilename(cat, 'jpeg', prefix)}`,
-      cat.pngBuffer.toString('base64'),
-      cat.jpegBuffer.toString('base64'),
+      ...(includeBase64
+        ? [cat.pngBuffer.toString('base64'), cat.jpegBuffer.toString('base64')]
+        : []),
     ]
       .map((v) => esc(String(v)))
       .join(','),
@@ -396,13 +428,20 @@ function writeMd(cats: CatFixture[], output: string, prefix?: string): void {
 
 // ── TypeScript types ──────────────────────────────────────────────────────────
 
-function writeTypes(cats: CatFixture[], output: string, prefix?: string): void {
+function writeTypes(
+  cats: CatFixture[],
+  output: string,
+  prefix?: string,
+  includeBase64 = true,
+): void {
+  const imageFields = includeBase64
+    ? '  path: string\n  base64: string'
+    : '  path: string';
   const lines = [
     '// Auto-generated — do not edit manually',
     '',
     'export interface CatImage {',
-    '  path: string',
-    '  base64: string',
+    imageFields,
     '}',
     '',
     'export interface Cat {',
@@ -416,6 +455,12 @@ function writeTypes(cats: CatFixture[], output: string, prefix?: string): void {
     'export const cats: Cat[] = [',
     ...cats.map((cat, i) => {
       const comma = i < cats.length - 1 ? ',' : '';
+      const pngBase64 = includeBase64
+        ? `, base64: '${cat.pngBuffer.toString('base64')}'`
+        : '';
+      const jpegBase64 = includeBase64
+        ? `, base64: '${cat.jpegBuffer.toString('base64')}'`
+        : '';
       return [
         '  {',
         `    index: ${cat.index},`,
@@ -423,8 +468,8 @@ function writeTypes(cats: CatFixture[], output: string, prefix?: string): void {
         `    name: '${cat.name}',`,
         `    text: \`${cat.text.replace(/`/g, '\\`')}\`,`,
         '    images: {',
-        `      png:  { path: 'images/${catFilename(cat, 'png', prefix)}',  base64: '${cat.pngBuffer.toString('base64')}' },`,
-        `      jpeg: { path: 'images/${catFilename(cat, 'jpeg', prefix)}', base64: '${cat.jpegBuffer.toString('base64')}' },`,
+        `      png:  { path: 'images/${catFilename(cat, 'png', prefix)}'${pngBase64} },`,
+        `      jpeg: { path: 'images/${catFilename(cat, 'jpeg', prefix)}'${jpegBase64} },`,
         '    },',
         `  }${comma}`,
       ].join('\n');

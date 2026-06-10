@@ -44,7 +44,7 @@ yargs(process.argv.slice(2))
         .option('count', {
           alias: 'n',
           type: 'number',
-          default: rc.count ?? 10,
+          default: rc.count ?? 1,
           describe: 'Number of cats to generate',
         })
         .option('formats', {
@@ -139,7 +139,7 @@ yargs(process.argv.slice(2))
         .option('count', {
           alias: 'n',
           type: 'number',
-          default: rc.count ?? 10,
+          default: rc.count ?? 1,
           describe: 'Number of photos to download',
         })
         .option('output', {

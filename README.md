@@ -29,13 +29,13 @@ npm run start generate
 npm run dev generate
 ```
 
-Generates 10 cats in all formats into `./output`.
+Generates 1 cat in all formats into `./output`.
 
 ### Options
 
 | Option          | Alias | Default    | Description                                             |
 | --------------- | ----- | ---------- | ------------------------------------------------------- |
-| `--count`       | `-n`  | `10`       | Number of cats to generate                              |
+| `--count`       | `-n`  | `1`        | Number of cats to generate                              |
 | `--formats`     | `-f`  | `all`      | Comma-separated list of formats (or `all`)              |
 | `--output`      | `-o`  | `./output` | Output directory                                        |
 | `--seed`        | `-s`  | —          | Random seed for reproducible output                     |
@@ -159,13 +159,13 @@ Download standalone real cat photos (JPEG) from cataas.com, no fixtures generate
 npm run dev jpg
 ```
 
-Downloads 10 photos into `./output`.
+Downloads 1 photo into `./output`.
 
 ### Options
 
 | Option          | Alias | Default    | Description                                             |
 | --------------- | ----- | ---------- | ------------------------------------------------------- |
-| `--count`       | `-n`  | `10`       | Number of photos to download                            |
+| `--count`       | `-n`  | `1`        | Number of photos to download                            |
 | `--output`      | `-o`  | `./output` | Output directory                                        |
 | `--seed`        | `-s`  | —          | Random seed for reproducible filenames (cat names)      |
 | `--prefix`      | `-p`  | —          | Filename prefix (e.g. `auth` → `auth_cat_001_Luna.jpg`) |

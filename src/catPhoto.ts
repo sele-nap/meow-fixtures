@@ -81,11 +81,13 @@ export async function fetchCatPhoto(
     try {
       // Cache-buster so every call gets a fresh random cat
       const url = `https://cataas.com/cat?width=${size}&height=${size}&_=${Date.now()}-${attempt}`;
-      const jpegBuffer = await downloadBuffer(url);
+      const downloaded = await downloadBuffer(url);
 
-      // Convert to PNG using jimp so both formats are always available
-      const img = await Jimp.read(jpegBuffer);
+      // cataas.com doesn't always return a JPEG (sometimes PNG/GIF), so
+      // re-encode via jimp to guarantee both buffers match their extensions.
+      const img = await Jimp.read(downloaded);
       const pngBuffer = await img.getBufferAsync(Jimp.MIME_PNG);
+      const jpegBuffer = await img.getBufferAsync(Jimp.MIME_JPEG);
 
       return { pngBuffer, jpegBuffer };
     } catch (err) {

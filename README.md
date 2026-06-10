@@ -86,12 +86,16 @@ npm run dev generate -- -o ./tests/fixtures
 
 ### Seed — reproducible output
 
-Same seed always produces the same cats and text.
+Same seed always produces the same cat IDs, names, ipsum text and pixel art (PNG).
 
 ```bash
 npm run dev generate -- --seed 42
 npm run dev generate -- --seed 1337
 ```
+
+> **Note:** the real cat photo (`jpeg`) is fetched from cataas.com, which
+> returns a random photo on every request — it is never reproducible, even
+> with `--seed`.
 
 ### Prefix — namespaced filenames
 
@@ -259,7 +263,7 @@ output/
 | Format  | Content                                                |
 | ------- | ------------------------------------------------------ |
 | `png`   | Pixel art cat generated from a pool of 25 343 IDs      |
-| `jpeg`  | Real cat photo fetched from cataas.com                 |
+| `jpeg`  | Real cat photo fetched from cataas.com (not seedable)  |
 | `json`  | Array of cats with name, text, image path and base64   |
 | `csv`   | One cat per row with name, text, image path and base64 |
 | `txt`   | Plain text with cat name and cat ipsum paragraphs      |

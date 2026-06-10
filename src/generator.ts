@@ -43,6 +43,13 @@ export const ALL_FORMATS = [
 ] as const;
 export type Format = (typeof ALL_FORMATS)[number];
 
+const IMAGE_FORMATS = ['png', 'jpeg'];
+
+/** Returns the requested formats that produce a `cats.<ext>` data file (excludes images). */
+function dataFileFormats(formats: string[]): string[] {
+  return formats.filter((f) => !IMAGE_FORMATS.includes(f));
+}
+
 // ── Data building ────────────────────────────────────────────────────────────
 
 async function buildCats(
@@ -178,11 +185,10 @@ function printDryRun(options: GenerateOptions): void {
   if (seed !== undefined) console.log(`  seed    : ${seed}`);
   if (prefix) console.log(`  prefix  : ${prefix}`);
   console.log('\nFiles that would be generated:');
-  const fileFormats = formats.filter((f) => !['png', 'jpeg'].includes(f));
-  fileFormats.forEach((f) => console.log(`  ${output}/cats.${f}`));
-  if (formats.includes('png') || formats.includes('jpeg')) {
-    const exts = ['png', 'jpeg'].filter((f) => formats.includes(f));
-    console.log(`  ${output}/images/  (${count} × [${exts.join(', ')}])`);
+  dataFileFormats(formats).forEach((f) => console.log(`  ${output}/cats.${f}`));
+  const imageExts = IMAGE_FORMATS.filter((f) => formats.includes(f));
+  if (imageExts.length > 0) {
+    console.log(`  ${output}/images/  (${count} × [${imageExts.join(', ')}])`);
   }
 }
 
@@ -470,12 +476,11 @@ function printSummary(
   output: string,
 ): void {
   console.log(`\nDone! Files written to: ${output}`);
-  const fileFormats = formats.filter((f) => !['png', 'jpeg'].includes(f));
-  fileFormats.forEach((f) => {
+  dataFileFormats(formats).forEach((f) => {
     const ext = f === 'types' ? 'types.ts' : f;
     console.log(`  cats.${ext}`);
   });
-  if (formats.includes('png') || formats.includes('jpeg')) {
+  if (IMAGE_FORMATS.some((f) => formats.includes(f))) {
     console.log(`  images/  (${cats.length} file(s))`);
   }
 }

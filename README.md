@@ -6,8 +6,6 @@
 
 Forget boring test data. Your fixtures now come with cats.
 
-Forget boring test data. Your fixtures now come with cats.
-
 ## Installation
 
 ```bash

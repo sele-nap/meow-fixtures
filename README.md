@@ -1,4 +1,10 @@
-# meow-fixtures
+# meow-fixtures 🐾
+
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js&logoColor=white)
+
+Forget boring test data. Your fixtures now come with cats.
 
 Forget boring test data. Your fixtures now come with cats.
 
